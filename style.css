@@ -186,3 +186,179 @@ body {
     height: 200px;
 }
 
+/* ปุ่ม BLE และ Tare ที่ปรับปรุงแล้ว */
+.ble-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.ble-btn, .tare-btn {
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ble-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: 2px solid #5a6fd8;
+}
+
+.tare-btn {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: 2px solid #e94b60;
+}
+
+.ble-btn::before, .tare-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.7s;
+}
+
+.ble-btn:hover::before, .tare-btn:hover::before {
+    left: 100%;
+}
+
+.ble-btn:hover, .tare-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.ble-btn:active, .tare-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.ble-btn .material-symbols-outlined, .tare-btn .material-symbols-outlined {
+    font-size: 22px;
+    transition: transform 0.3s ease;
+}
+
+.ble-btn:hover .material-symbols-outlined {
+    transform: rotate(20deg);
+}
+
+.tare-btn:hover .material-symbols-outlined {
+    transform: scale(1.2);
+}
+
+/* สถานะการเชื่อมต่อ */
+.ble-btn.connected {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    border: 2px solid #3d8b40;
+}
+
+.ble-btn.connecting {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    border: 2px solid #e65100;
+}
+
+/* การตอบสนองบนมือถือ */
+@media (max-width: 768px) {
+    .ble-controls {
+        top: 10px;
+        right: 10px;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .ble-btn, .tare-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+}
+/* Animation สำหรับ notification */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+/* การปรับปรุงหัวข้อ Gauge Saline Level */
+.gauge-title {
+    font-size: 2.8rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, #010c0c 0%, #010c0c 50%, #010c0c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 4px 15px rgba(241, 239, 240, 0.3);
+    position: relative;
+    padding: 15px 0;
+    letter-spacing: 1px;
+    animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+.gauge-title::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 4px;
+    /* background: linear-gradient(90deg, transparent, #00ffff, #ff00ff, #00ffff, transparent); */
+    border-radius: 2px;
+}
+
+.gauge-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    /* background: linear-gradient(90deg, transparent, #00ffff, #ff00ff, transparent); */
+    border-radius: 2px;
+}
+
+@keyframes titleGlow {
+    0% {
+        text-shadow: 0 4px 15px rgba(0, 255, 255, 0.3),
+                     0 0 20px rgba(0, 255, 255, 0.2);
+    }
+    100% {
+        text-shadow: 0 4px 25px rgba(0, 255, 255, 0.5),
+                     0 0 30px rgba(255, 0, 255, 0.3),
+                     0 0 40px rgba(0, 255, 255, 0.2);
+    }
+}

@@ -50,6 +50,11 @@ fm.init({
 // ---- BLE Connect ----
 async function connectBLE() {
   try {
+    // อัพเดทสถานะปุ่ม
+    const bleBtn = document.querySelector('.ble-btn');
+    bleBtn.innerHTML = '<span class="material-symbols-outlined">bluetooth_searching</span>Connecting...';
+    bleBtn.classList.add('connecting');
+    
     bleDevice = await navigator.bluetooth.requestDevice({
       filters: [{ namePrefix: "ESP32C3-Scale" }],
       optionalServices: [SERVICE_UUID]
@@ -64,8 +69,21 @@ async function connectBLE() {
     await bleCharacteristic.startNotifications();
     bleCharacteristic.addEventListener("characteristicvaluechanged", handleNotification);
 
+    // อัพเดทสถานะเมื่อเชื่อมต่อสำเร็จ
+    bleBtn.innerHTML = '<span class="material-symbols-outlined">bluetooth_connected</span>Connected';
+    bleBtn.classList.remove('connecting');
+    bleBtn.classList.add('connected');
+    
+    // แสดงการแจ้งเตือน
+    showNotification("BLE Connected Successfully");
+    
   } catch (error) {
-    alert("❌ BLE Error: " + error);
+    // รีเซ็ตสถานะปุ่มเมื่อเกิดข้อผิดพลาด
+    const bleBtn = document.querySelector('.ble-btn');
+    bleBtn.innerHTML = '<span class="material-symbols-outlined">bluetooth</span>Connect BLE';
+    bleBtn.classList.remove('connecting', 'connected');
+    
+    showNotification("BLE Error: " + error, "error");
   }
 }
 
@@ -83,23 +101,98 @@ function handleNotification(event) {
 
 // ---- Send Tare Command ----
 async function sendTare() {
-  if (!bleCharacteristicTX) return alert("❌ BLE Not Connected");
+  if (!bleCharacteristicTX) {
+    showNotification("BLE Not Connected", "error");
+    return;
+  }
 
-  const encoder = new TextEncoder();
-  await bleCharacteristicTX.writeValue(encoder.encode("tare"));
-  alert("✅ Tare Sent");
+  // เพิ่มเอฟเฟกต์การโหลดชั่วคราว
+  const tareBtn = document.querySelector('.tare-btn');
+  const originalText = tareBtn.innerHTML;
+  tareBtn.innerHTML = '<span class="material-symbols-outlined">autorenew</span>Taring...';
+  
+  try {
+    const encoder = new TextEncoder();
+    await bleCharacteristicTX.writeValue(encoder.encode("tare"));
+    
+    // รีเซ็ตปุ่มหลังจากเสร็จสิ้น
+    setTimeout(() => {
+      tareBtn.innerHTML = originalText;
+    }, 800);
+    
+    showNotification("Tare Command Sent");
+  } catch (error) {
+    tareBtn.innerHTML = originalText;
+    showNotification("Tare Failed: " + error, "error");
+  }
 }
 
-// ---- Add BLE Button ----
-const btn = document.createElement("button");
-btn.innerText = "Connect BLE";
-btn.style.cssText = "position:fixed; top:15px; right:15px; padding:10px 20px; font-size:18px;";
-btn.onclick = connectBLE;
-document.body.appendChild(btn);
+// ---- Create Modern BLE Controls ----
+function createBLEControls() {
+  const controlsContainer = document.createElement("div");
+  controlsContainer.className = "ble-controls";
+  
+  // ปุ่ม Connect BLE
+  const bleBtn = document.createElement("button");
+  bleBtn.className = "ble-btn";
+  bleBtn.innerHTML = '<span class="material-symbols-outlined">bluetooth</span>Connect BLE';
+  bleBtn.onclick = connectBLE;
+  
+  // ปุ่ม Tare
+  const tareBtn = document.createElement("button");
+  tareBtn.className = "tare-btn";
+  tareBtn.innerHTML = '<span class="material-symbols-outlined">balance</span>Tare';
+  tareBtn.onclick = sendTare;
+  
+  controlsContainer.appendChild(bleBtn);
+  controlsContainer.appendChild(tareBtn);
+  document.body.appendChild(controlsContainer);
+}
 
-// ---- Add Tare Button ----
-const tareBtn = document.createElement("button");
-tareBtn.innerText = "Tare";
-tareBtn.style.cssText = "position:fixed; top:65px; right:15px; padding:10px 20px; font-size:18px;";
-tareBtn.onclick = sendTare;
-document.body.appendChild(tareBtn);
+// ---- Simple Notification System ----
+function showNotification(message, type = "success") {
+  // สร้างองค์ประกอบการแจ้งเตือน
+  const notification = document.createElement("div");
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `
+    <span class="material-symbols-outlined">
+      ${type === "success" ? "check_circle" : "error"}
+    </span>
+    <span>${message}</span>
+  `;
+  
+  // เพิ่มสไตล์การแจ้งเตือน
+  notification.style.cssText = `
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    background: ${type === "success" ? "#4CAF50" : "#f44336"};
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10000;
+    font-size: 14px;
+    animation: fadeIn 0.3s ease;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // ซ่อนการแจ้งเตือนหลังจาก 3 วินาที
+  setTimeout(() => {
+    notification.style.animation = "fadeOut 0.3s ease";
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 3000);
+}
+
+// ---- Initialize ----
+document.addEventListener('DOMContentLoaded', function() {
+  createBLEControls();
+});
